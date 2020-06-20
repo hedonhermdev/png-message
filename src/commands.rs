@@ -7,8 +7,7 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
-
-fn read_png_file(file: PathBuf) -> Result<Png, &'static str>{
+fn read_png_file(file: PathBuf) -> Result<Png, &'static str> {
     let file_buf = fs::read(file);
 
     if file_buf.is_err() {
@@ -18,7 +17,7 @@ fn read_png_file(file: PathBuf) -> Result<Png, &'static str>{
     let file_buf = file_buf.unwrap();
 
     let png = Png::try_from(file_buf.as_ref());
-    
+
     if png.is_err() {
         return Err("Cannot read the PNG file");
     }
@@ -26,7 +25,12 @@ fn read_png_file(file: PathBuf) -> Result<Png, &'static str>{
     return png;
 }
 
-pub fn encode(file: PathBuf, message: String, chunk_type: String, output: Option<PathBuf>) -> Result<(), &'static str>{
+pub fn encode(
+    file: PathBuf,
+    message: String,
+    chunk_type: String,
+    output: Option<PathBuf>,
+) -> Result<(), &'static str> {
     let png = read_png_file(file);
     if png.is_err() {
         return Err(png.err().unwrap());
@@ -43,7 +47,7 @@ pub fn encode(file: PathBuf, message: String, chunk_type: String, output: Option
     }
 
     let chunk_type = chunk_type.unwrap();
-    
+
     let chunk_data = Vec::try_from(message).unwrap();
     let chunk = Chunk::new(chunk_type, chunk_data);
 
@@ -57,14 +61,13 @@ pub fn encode(file: PathBuf, message: String, chunk_type: String, output: Option
             if result.is_err() {
                 return Err("Cannot write to the output file");
             }
-        },
+        }
         None => {
             println!("{:?}", png.as_bytes());
-            }
-        };
+        }
+    };
     return Ok(());
 }
-
 
 pub fn decode(file: PathBuf, chunk_type: String) -> Result<(), &'static str> {
     let png = read_png_file(file);
@@ -73,17 +76,15 @@ pub fn decode(file: PathBuf, chunk_type: String) -> Result<(), &'static str> {
     }
 
     let png = png.unwrap();
-    
+
     let chunk = png.chunk_by_type(chunk_type.as_ref());
-    
+
     match chunk {
         Some(c) => {
             println!("{}", String::from_utf8(c.data().to_vec()).unwrap());
             Ok(())
         }
-        None => {
-            Err("Chunk not found")
-        }
+        None => Err("Chunk not found"),
     }
 }
 

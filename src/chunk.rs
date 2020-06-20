@@ -1,10 +1,10 @@
 use byteorder::{BigEndian, ByteOrder};
 use crc::crc32;
+use std;
 use std::convert::TryFrom;
 use std::io::{BufReader, Read};
 use std::string::FromUtf8Error;
 use std::u32;
-use std;
 
 use super::chunk_type::ChunkType;
 

@@ -7,5 +7,3 @@ mod png;
 fn main() -> Result<(), &'static str> {
     return cli::CLI::run();
 }
-
-

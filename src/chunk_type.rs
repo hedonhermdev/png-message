@@ -1,16 +1,15 @@
+use char;
+use std::cmp::PartialEq;
 use std::convert::TryFrom;
-use std::str::FromStr;
-use std::str;
 use std::fmt;
 use std::fmt::Display;
-use std::cmp::PartialEq;
 use std::iter::Iterator;
-use char;
+use std::str;
+use std::str::FromStr;
 
-#[derive(Debug)]
-#[derive(Eq, PartialEq)]
-pub struct ChunkType{
-    pub data: [u8; 4]
+#[derive(Debug, Eq, PartialEq)]
+pub struct ChunkType {
+    pub data: [u8; 4],
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
@@ -18,23 +17,19 @@ impl TryFrom<[u8; 4]> for ChunkType {
 
     fn try_from(value: [u8; 4]) -> Result<Self, Self::Error> {
         // TODO: Define cases where Error should be returned.
-        return Ok(ChunkType{ data: value })
+        return Ok(ChunkType { data: value });
     }
 }
 
 impl FromStr for ChunkType {
-
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() != 4 {
             return Err("String length is not equal to 4 bytes");
         }
-    
-        let string_is_alpha: bool = s.chars()
-            .all(|c| {
-                (c as char).is_ascii_alphabetic()
-            });
+
+        let string_is_alpha: bool = s.chars().all(|c| (c as char).is_ascii_alphabetic());
 
         if !string_is_alpha {
             return Err("Valid ChunkType must contain only ASCII alphabetic characters");
@@ -43,7 +38,7 @@ impl FromStr for ChunkType {
         let mut byte_array: [u8; 4] = [0; 4];
         byte_array.copy_from_slice(s.as_bytes());
 
-        return Ok(ChunkType{ data: byte_array });
+        return Ok(ChunkType { data: byte_array });
     }
 }
 
@@ -52,7 +47,6 @@ impl Display for ChunkType {
         f.write_fmt(format_args!("{}", str::from_utf8(&self.data).unwrap()))
     }
 }
-
 
 impl ChunkType {
     pub fn bytes(&self) -> [u8; 4] {
@@ -66,7 +60,7 @@ impl ChunkType {
     pub fn is_critical(&self) -> bool {
         return (self.data[0] as char).is_ascii_uppercase();
     }
-    
+
     pub fn is_public(&self) -> bool {
         return (self.data[1] as char).is_ascii_uppercase();
     }
@@ -78,9 +72,7 @@ impl ChunkType {
     pub fn is_safe_to_copy(&self) -> bool {
         return !(self.data[3] as char).is_ascii_uppercase();
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
