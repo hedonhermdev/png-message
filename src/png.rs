@@ -1,14 +1,12 @@
 use crate::chunk::Chunk;
-use crate::chunk_type::ChunkType;
-use crate::commands;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::BufReader;
-use std::io::ErrorKind;
 use std::io::Read;
 use std::str;
 use std::u32;
+use anyhow::{Error, Result, anyhow};
 
 pub struct Png {
     header: [u8; 8],
@@ -16,8 +14,8 @@ pub struct Png {
 }
 
 impl TryFrom<&[u8]> for Png {
-    type Error = &'static str;
-    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+    type Error = Error;
+    fn try_from(value: &[u8]) -> Result<Self> {
         let mut reader = BufReader::new(value);
 
         // Header
@@ -25,7 +23,7 @@ impl TryFrom<&[u8]> for Png {
         let read_op = reader.read_exact(&mut header);
 
         if read_op.is_err() {
-            return Err("Error while reading PNG header");
+            return Err(anyhow!("Error while reading PNG header"));
         }
 
         // Chunks
@@ -38,7 +36,7 @@ impl TryFrom<&[u8]> for Png {
             let chunk = Chunk::try_from(&value[curr_index as usize..]);
 
             if chunk.is_err() {
-                return Err("Invalid Chunk found.");
+                return Err(anyhow!("Invalid Chunk found."));
             }
 
             let chunk = chunk.unwrap();
@@ -49,7 +47,7 @@ impl TryFrom<&[u8]> for Png {
         }
 
         if header != Self::STANDARD_HEADER {
-            return Err("Invalid Header");
+            return Err(anyhow!("Invalid Header"));
         }
 
         Ok(Png { header, chunks })
@@ -75,14 +73,14 @@ impl Png {
         self.chunks.push(chunk);
     }
 
-    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<(), &'static str> {
+    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<()> {
         let initial_length = self.chunks.len();
 
         self.chunks
             .retain(|chunk| !(str::from_utf8(&chunk.chunk_type().bytes()).unwrap() == chunk_type));
 
         if initial_length == self.chunks.len() {
-            return Err("Chunk not found");
+            return Err(anyhow!("Chunk not found"));
         }
 
         return Ok(());
@@ -136,7 +134,7 @@ mod tests {
         Png::from_chunks(chunks)
     }
 
-    fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk, &'static str> {
+    fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk> {
         let chunk_type = ChunkType::from_str(chunk_type).unwrap();
         let data: Vec<u8> = data.bytes().collect();
 

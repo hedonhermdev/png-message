@@ -3,8 +3,9 @@ use crc::crc32;
 use std;
 use std::convert::TryFrom;
 use std::io::{BufReader, Read};
-use std::string::FromUtf8Error;
 use std::u32;
+
+use anyhow::{Result, Error, anyhow};
 
 use super::chunk_type::ChunkType;
 
@@ -16,16 +17,17 @@ pub struct Chunk {
 }
 
 impl TryFrom<&[u8]> for Chunk {
-    type Error = &'static str;
 
-    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self> {
         let mut reader = BufReader::new(value);
 
         let mut length_arr: [u8; 4] = [0; 4];
         let mut read_op = reader.read_exact(&mut length_arr);
 
         if read_op.is_err() {
-            return Err("Cannot read chunk length");
+            return Err(anyhow!("chunk: cannot read chunk from bytes"));
         }
 
         let length = u32::from_be_bytes(length_arr);
@@ -34,20 +36,20 @@ impl TryFrom<&[u8]> for Chunk {
         read_op = reader.read_exact(&mut chunk_type_arr);
 
         if read_op.is_err() {
-            return Err("Cannot read chunk type");
+            return Err(anyhow!("Cannot read chunk type"));
         }
 
         let chunk_type = ChunkType::try_from(chunk_type_arr);
 
         if chunk_type.is_err() {
-            return Err("ChunkType is Invalid");
+            return Err(anyhow!("ChunkType is Invalid"));
         }
 
         let mut chunk_data: Vec<u8> = vec![0; length as usize];
         read_op = reader.read_exact(&mut chunk_data);
 
         if read_op.is_err() {
-            return Err("Cannot read chunk data");
+            return Err(anyhow!("Cannot read chunk data"));
         }
 
         let mut crc_arr: [u8; 4] = [0; 4];
@@ -55,7 +57,7 @@ impl TryFrom<&[u8]> for Chunk {
         read_op = reader.read_exact(&mut crc_arr);
 
         if read_op.is_err() {
-            return Err("Cannot read chunk CRC");
+            return Err(anyhow!("Cannot read chunk CRC"));
         }
 
         let crc = u32::from_be_bytes(crc_arr);
@@ -63,7 +65,7 @@ impl TryFrom<&[u8]> for Chunk {
         let calucated_crc: u32 = crc32::checksum_ieee(&value[4..(8 + length) as usize]);
 
         if crc != calucated_crc {
-            return Err("CRC is incorrect");
+            return Err(anyhow!("CRC is incorrect"));
         }
 
         return Ok(Chunk {

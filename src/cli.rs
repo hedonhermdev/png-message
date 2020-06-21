@@ -2,6 +2,8 @@ use crate::commands;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+use anyhow::Result;
+
 #[derive(Debug, StructOpt)]
 #[structopt(name = "PngMe", about = "Encode/Decode secret messages in PNG files")]
 pub enum CLI {
@@ -38,10 +40,10 @@ pub enum CLI {
 }
 
 impl CLI {
-    pub fn run() -> Result<(), &'static str> {
+    pub fn run() -> Result<()> {
         let args: Self = Self::from_args();
 
-        let result = match args {
+        match args {
             CLI::Encode {
                 file,
                 message,
@@ -50,7 +52,6 @@ impl CLI {
             } => commands::encode(file, message, chunk_type, output),
             CLI::Decode { file, chunk_type } => commands::decode(file, chunk_type),
             CLI::Remove { file, chunk_type } => commands::remove(file, chunk_type),
-        };
-        return result;
+        }
     }
 }

@@ -7,6 +7,8 @@ use std::iter::Iterator;
 use std::str;
 use std::str::FromStr;
 
+use anyhow::{Error, Result, anyhow};
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct ChunkType {
     pub data: [u8; 4],
@@ -22,17 +24,17 @@ impl TryFrom<[u8; 4]> for ChunkType {
 }
 
 impl FromStr for ChunkType {
-    type Err = &'static str;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() != 4 {
-            return Err("String length is not equal to 4 bytes");
+            return Err(anyhow!("String length is not equal to 4 bytes"));
         }
 
         let string_is_alpha: bool = s.chars().all(|c| (c as char).is_ascii_alphabetic());
 
         if !string_is_alpha {
-            return Err("Valid ChunkType must contain only ASCII alphabetic characters");
+            return Err(anyhow!("Valid ChunkType must contain only ASCII alphabetic characters"));
         }
 
         let mut byte_array: [u8; 4] = [0; 4];

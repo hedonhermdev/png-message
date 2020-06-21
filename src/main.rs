@@ -4,6 +4,8 @@ mod cli;
 mod commands;
 mod png;
 
-fn main() -> Result<(), &'static str> {
+use anyhow::Result;
+
+fn main() -> Result<()> {
     return cli::CLI::run();
 }
