@@ -82,7 +82,11 @@ pub fn decode(file: PathBuf, chunk_type: String) -> Result<()> {
 
     match chunk {
         Some(c) => {
-            println!("{}", String::from_utf8(c.data().to_vec()).unwrap());
+            if let Ok(data) = String::from_utf8(c.data().to_vec()) {
+                println!("{}", data);
+            } else {
+                println!("{:?}", c.data().to_vec());
+            }
             Ok(())
         }
         None => Err(anyhow!("Chunk not found")),
